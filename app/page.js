@@ -27,7 +27,7 @@ export default function Home() {
 
         <PulseDivider label="Three tools, one companion" />
 
-        <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 py-10">
+        <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 py-10">
           <FeatureCard
             href="/specialist"
             eyebrow="01 · Symptom Router"
@@ -68,6 +68,20 @@ export default function Home() {
               </svg>
             }
           />
+          <FeatureCard
+            href="/scan"
+            eyebrow="04 · Health Scan"
+            title="What does this look like?"
+            description="Upload a photo of a visible symptom or a lab report page. Vitalis describes what it observes in plain language — never a confirmed diagnosis."
+            cta="Analyze a photo"
+            icon={
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <rect x="2.5" y="4" width="15" height="11" rx="2" stroke="currentColor" strokeWidth="1.6" />
+                <circle cx="10" cy="9.5" r="3" stroke="currentColor" strokeWidth="1.6" />
+                <path d="M6 4l1-1.5h6L14 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            }
+          />
         </section>
 
         <footer className="py-12 text-center text-xs text-ink/40 font-mono">
@@ -77,3 +91,4 @@ export default function Home() {
     </>
   );
 }
+
