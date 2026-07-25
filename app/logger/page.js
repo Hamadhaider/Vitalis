@@ -1,11 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import PulseDivider from '@/components/PulseDivider';
 import Disclaimer from '@/components/Disclaimer';
 import MicButton from '@/components/MicButton';
 import SeverityChart from '@/components/SeverityChart';
+import HealthScoreCard from '@/components/HealthScoreCard';
+import { calculateHealthScore } from '@/lib/healthScore';
+import { getStoredLanguage } from '@/components/LanguageToggle';
 
 const CONDITIONS = ['IBS', 'Migraine', 'Eczema', 'Endometriosis', 'Asthma', 'Other'];
 const TRIGGERS = ['Poor sleep', 'Stress', 'Specific food', 'Weather change', 'Skipped meds', 'Exercise', 'Alcohol'];
@@ -31,6 +34,47 @@ export default function LoggerPage() {
   const [insight, setInsight] = useState(null);
   const [error, setError] = useState('');
   const [hydrated, setHydrated] = useState(false);
+  const [reminderOn, setReminderOn] = useState(false);
+
+  const healthScore = useMemo(() => calculateHealthScore(entries), [entries]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.localStorage.getItem('vitalis_reminder_v1') === 'on') {
+      setReminderOn(true);
+    }
+  }, []);
+
+  async function toggleReminder() {
+    if (reminderOn) {
+      setReminderOn(false);
+      window.localStorage.setItem('vitalis_reminder_v1', 'off');
+      return;
+    }
+    if (!('Notification' in window)) {
+      setError('This browser does not support notifications.');
+      return;
+    }
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      setReminderOn(true);
+      window.localStorage.setItem('vitalis_reminder_v1', 'on');
+      new Notification('Vitalis reminders on', {
+        body: "We'll nudge you to log while this tab is open. Keep it pinned for best results.",
+      });
+      // Basic in-tab reminder: checks once an hour whether today has an entry yet.
+      setInterval(() => {
+        const today = new Date().toISOString().slice(0, 10);
+        const loggedToday = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || '[]').some(
+          (e) => e.date === today
+        );
+        if (!loggedToday && Notification.permission === 'granted') {
+          new Notification('Vitalis', { body: "Haven't logged today yet — take 30 seconds?" });
+        }
+      }, 60 * 60 * 1000);
+    } else {
+      setError('Notification permission was not granted.');
+    }
+  }
 
   useEffect(() => {
     setEntries(loadEntries());
@@ -78,7 +122,7 @@ export default function LoggerPage() {
       const res = await fetch('/api/insights', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ condition, entries }),
+        body: JSON.stringify({ condition, entries, language: getStoredLanguage() }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Something went wrong.');
@@ -111,6 +155,68 @@ export default function LoggerPage() {
     URL.revokeObjectURL(url);
   }
 
+  async function exportPdf() {
+    const { jsPDF } = await import('jspdf');
+    const doc = new jsPDF();
+    const margin = 15;
+    let y = 20;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.text(`Vitalis Condition Report — ${condition}`, margin, y);
+    y += 8;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(120);
+    doc.text(`Generated ${new Date().toLocaleString()}`, margin, y);
+    doc.setTextColor(0);
+    y += 10;
+
+    if (healthScore) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.text(`Health score: ${healthScore.overall}/100 (${healthScore.label})`, margin, y);
+      y += 8;
+    }
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text('Entries', margin, y);
+    y += 6;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+
+    entries.forEach((e) => {
+      if (y > 275) {
+        doc.addPage();
+        y = 20;
+      }
+      const line = `${e.date}  |  Severity ${e.severity}/10  |  Triggers: ${
+        e.triggers.join(', ') || 'none'
+      }`;
+      doc.text(line, margin, y);
+      y += 5;
+      if (e.notes) {
+        const noteLines = doc.splitTextToSize(`Notes: ${e.notes}`, 180);
+        doc.setTextColor(100);
+        doc.text(noteLines, margin + 3, y);
+        doc.setTextColor(0);
+        y += noteLines.length * 4.5;
+      }
+      y += 3;
+    });
+
+    doc.setFontSize(8);
+    doc.setTextColor(140);
+    doc.text(
+      'Vitalis is educational and does not replace professional medical advice.',
+      margin,
+      290
+    );
+
+    doc.save(`vitalis-${condition.toLowerCase()}-report.pdf`);
+  }
+
   return (
     <>
       <Navbar />
@@ -137,7 +243,7 @@ export default function LoggerPage() {
             id="condition"
             value={condition}
             onChange={(e) => setCondition(e.target.value)}
-            className="focus-ring rounded-full border border-line bg-white px-4 py-2 text-sm"
+            className="focus-ring rounded-full border border-line bg-surface px-4 py-2 text-sm"
           >
             {CONDITIONS.map((c) => (
               <option key={c} value={c}>
@@ -147,7 +253,7 @@ export default function LoggerPage() {
           </select>
         </div>
 
-        <form onSubmit={addEntry} className="mt-4 bg-white border border-line rounded-2xl p-6 sm:p-8 space-y-6">
+        <form onSubmit={addEntry} className="mt-4 bg-surface border border-line rounded-2xl p-6 sm:p-8 space-y-6">
           <div>
             <label htmlFor="severity" className="block text-sm font-medium mb-2">
               Today&rsquo;s severity: <span className="font-mono text-pine">{severity}/10</span>
@@ -227,7 +333,24 @@ export default function LoggerPage() {
             disabled={entries.length === 0}
             className="focus-ring px-5 py-2.5 rounded-full border border-line text-sm font-medium hover:border-ink/40 transition-colors disabled:opacity-40"
           >
-            Export doctor-shareable report
+            Export as text
+          </button>
+          <button
+            onClick={exportPdf}
+            disabled={entries.length === 0}
+            className="focus-ring px-5 py-2.5 rounded-full border border-line text-sm font-medium hover:border-ink/40 transition-colors disabled:opacity-40"
+          >
+            Export doctor-ready PDF
+          </button>
+          <button
+            onClick={toggleReminder}
+            className={`focus-ring px-5 py-2.5 rounded-full border text-sm font-medium transition-colors ${
+              reminderOn
+                ? 'bg-pine text-paper border-pine'
+                : 'border-line hover:border-ink/40'
+            }`}
+          >
+            {reminderOn ? 'Reminders on' : 'Remind me to log'}
           </button>
         </div>
 
@@ -238,7 +361,13 @@ export default function LoggerPage() {
         )}
 
         {insight && (
-          <div className="bg-white border border-line rounded-2xl p-6 sm:p-8 mb-8 animate-fade_up">
+          <div className="bg-surface border border-line rounded-2xl p-6 sm:p-8 mb-8 animate-fade_up">
+            {insight.emergency && (
+              <div className="bg-brick text-paper rounded-xl px-4 py-3 mb-5 font-medium text-sm">
+                This looks like it could be urgent. Please consider contacting a doctor or
+                emergency services now.
+              </div>
+            )}
             <p className="font-mono text-xs uppercase tracking-[0.18em] text-pine mb-3">Pattern insight</p>
             <p className="text-ink/75 leading-relaxed mb-4">{insight.summary}</p>
             {insight.possibleTriggers && insight.possibleTriggers.length > 0 && (
@@ -260,6 +389,8 @@ export default function LoggerPage() {
           </div>
         )}
 
+        <HealthScoreCard score={healthScore} />
+
         <SeverityChart entries={entries} />
 
         <div className="space-y-3">
@@ -271,7 +402,7 @@ export default function LoggerPage() {
           {entries.map((e) => (
             <div
               key={e.id}
-              className="flex items-start justify-between gap-4 bg-white border border-line rounded-xl px-5 py-4"
+              className="flex items-start justify-between gap-4 bg-surface border border-line rounded-xl px-5 py-4"
             >
               <div>
                 <p className="font-mono text-xs text-ink/50 mb-1">{e.date}</p>
@@ -297,3 +428,4 @@ export default function LoggerPage() {
     </>
   );
 }
+
