@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import PulseDivider from '@/components/PulseDivider';
 import Disclaimer from '@/components/Disclaimer';
 import MicButton from '@/components/MicButton';
+import { getStoredLanguage } from '@/components/LanguageToggle';
 
 const HISTORY_KEY = 'vitalis_specialist_history_v1';
 
@@ -60,7 +61,7 @@ export default function SpecialistPage() {
       const res = await fetch('/api/specialist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ symptoms, duration, severity }),
+        body: JSON.stringify({ symptoms, duration, severity, language: getStoredLanguage() }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Something went wrong.');
@@ -88,7 +89,7 @@ export default function SpecialistPage() {
 
         <Disclaimer />
 
-        <form onSubmit={handleSubmit} className="mt-8 bg-white border border-line rounded-2xl p-6 sm:p-8 space-y-6">
+        <form onSubmit={handleSubmit} className="mt-8 bg-surface border border-line rounded-2xl p-6 sm:p-8 space-y-6">
           <div>
             <div className="flex items-center justify-between gap-3 mb-2">
               <label htmlFor="symptoms" className="block text-sm font-medium">
@@ -166,7 +167,7 @@ export default function SpecialistPage() {
                 waiting for a specialist appointment.
               </div>
             )}
-            <div className="bg-white border border-line rounded-2xl p-6 sm:p-8">
+            <div className="bg-surface border border-line rounded-2xl p-6 sm:p-8">
               <p className="font-mono text-xs uppercase tracking-[0.18em] text-pine mb-2">
                 Suggested specialist · confidence: {result.confidence}
               </p>
@@ -215,7 +216,7 @@ export default function SpecialistPage() {
                 <button
                   key={h.id}
                   onClick={() => viewPast(h)}
-                  className="focus-ring w-full text-left bg-white border border-line rounded-xl px-4 py-3 hover:border-pine transition-colors"
+                  className="focus-ring w-full text-left bg-surface border border-line rounded-xl px-4 py-3 hover:border-pine transition-colors"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-sm font-medium">
@@ -233,3 +234,4 @@ export default function SpecialistPage() {
     </>
   );
 }
+
