@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import PulseDivider from '@/components/PulseDivider';
 import Disclaimer from '@/components/Disclaimer';
 import MicButton from '@/components/MicButton';
+
+const HISTORY_KEY = 'vitalis_specialist_history_v1';
 
 export default function SpecialistPage() {
   const [symptoms, setSymptoms] = useState('');
@@ -13,6 +15,41 @@ export default function SpecialistPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState(null);
+  const [history, setHistory] = useState([]);
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(HISTORY_KEY)) || [];
+      setHistory(saved);
+    } catch {
+      setHistory([]);
+    }
+  }, []);
+
+  function saveToHistory(symptomsText, data) {
+    const entry = {
+      id: Date.now(),
+      date: new Date().toISOString().slice(0, 10),
+      symptoms: symptomsText,
+      specialist: data.specialist,
+      confidence: data.confidence,
+      emergency: data.emergency,
+      full: data,
+    };
+    const updated = [entry, ...history].slice(0, 20);
+    setHistory(updated);
+    window.localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+  }
+
+  function clearHistory() {
+    setHistory([]);
+    window.localStorage.removeItem(HISTORY_KEY);
+  }
+
+  function viewPast(entry) {
+    setResult(entry.full);
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -28,6 +65,7 @@ export default function SpecialistPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Something went wrong.');
       setResult(data);
+      saveToHistory(symptoms, data);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -155,6 +193,39 @@ export default function SpecialistPage() {
               )}
 
               <p className="text-xs text-ink/45 border-t border-line pt-4">{result.disclaimer}</p>
+            </div>
+          </section>
+        )}
+
+        {history.length > 0 && (
+          <section className="mt-10">
+            <div className="flex items-center justify-between mb-4">
+              <p className="font-mono text-xs uppercase tracking-[0.18em] text-ink/50">
+                Past results
+              </p>
+              <button
+                onClick={clearHistory}
+                className="focus-ring text-xs text-ink/40 hover:text-brick"
+              >
+                Clear history
+              </button>
+            </div>
+            <div className="space-y-2">
+              {history.map((h) => (
+                <button
+                  key={h.id}
+                  onClick={() => viewPast(h)}
+                  className="focus-ring w-full text-left bg-white border border-line rounded-xl px-4 py-3 hover:border-pine transition-colors"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-medium">
+                      {h.emergency ? '⚠ Emergency flagged' : h.specialist}
+                    </p>
+                    <p className="font-mono text-xs text-ink/40">{h.date}</p>
+                  </div>
+                  <p className="text-xs text-ink/50 truncate mt-0.5">{h.symptoms}</p>
+                </button>
+              ))}
             </div>
           </section>
         )}
