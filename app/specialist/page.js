@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import PulseDivider from '@/components/PulseDivider';
 import Disclaimer from '@/components/Disclaimer';
+import MicButton from '@/components/MicButton';
 
 export default function SpecialistPage() {
   const [symptoms, setSymptoms] = useState('');
@@ -51,9 +52,16 @@ export default function SpecialistPage() {
 
         <form onSubmit={handleSubmit} className="mt-8 bg-white border border-line rounded-2xl p-6 sm:p-8 space-y-6">
           <div>
-            <label htmlFor="symptoms" className="block text-sm font-medium mb-2">
-              What are you feeling? Be specific.
-            </label>
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <label htmlFor="symptoms" className="block text-sm font-medium">
+                What are you feeling? Be specific.
+              </label>
+              <MicButton
+                onResult={(text) =>
+                  setSymptoms((prev) => (prev ? `${prev} ${text}` : text))
+                }
+              />
+            </div>
             <textarea
               id="symptoms"
               value={symptoms}
