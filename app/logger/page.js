@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import PulseDivider from '@/components/PulseDivider';
 import Disclaimer from '@/components/Disclaimer';
+import MicButton from '@/components/MicButton';
 
 const CONDITIONS = ['IBS', 'Migraine', 'Eczema', 'Endometriosis', 'Asthma', 'Other'];
 const TRIGGERS = ['Poor sleep', 'Stress', 'Specific food', 'Weather change', 'Skipped meds', 'Exercise', 'Alcohol'];
@@ -182,9 +183,16 @@ export default function LoggerPage() {
           </div>
 
           <div>
-            <label htmlFor="notes" className="block text-sm font-medium mb-2">
-              Notes
-            </label>
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <label htmlFor="notes" className="block text-sm font-medium">
+                Notes
+              </label>
+              <MicButton
+                onResult={(text) =>
+                  setNotes((prev) => (prev ? `${prev} ${text}` : text))
+                }
+              />
+            </div>
             <textarea
               id="notes"
               value={notes}
@@ -286,3 +294,4 @@ export default function LoggerPage() {
     </>
   );
 }
+
