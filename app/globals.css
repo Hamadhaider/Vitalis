@@ -2,13 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-paper: #FAF8F3;
+  --color-ink: #1B2B29;
+  --color-line: #E4DFD3;
+  --color-surface: #FFFFFF;
+}
+
+.dark {
+  --color-paper: #101E1B;
+  --color-ink: #EDEAE0;
+  --color-line: #2A3D39;
+  --color-surface: #162622;
+}
+
 html {
   scroll-behavior: smooth;
 }
 
 body {
-  background-color: #FAF8F3;
-  color: #1B2B29;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 ::selection {
