@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import PulseDivider from '@/components/PulseDivider';
 import Disclaimer from '@/components/Disclaimer';
 import MicButton from '@/components/MicButton';
+import SeverityChart from '@/components/SeverityChart';
 
 const CONDITIONS = ['IBS', 'Migraine', 'Eczema', 'Endometriosis', 'Asthma', 'Other'];
 const TRIGGERS = ['Poor sleep', 'Stress', 'Specific food', 'Weather change', 'Skipped meds', 'Exercise', 'Alcohol'];
@@ -259,6 +260,8 @@ export default function LoggerPage() {
           </div>
         )}
 
+        <SeverityChart entries={entries} />
+
         <div className="space-y-3">
           {entries.length === 0 && (
             <p className="text-sm text-ink/45 text-center py-10">
@@ -294,4 +297,3 @@ export default function LoggerPage() {
     </>
   );
 }
-
