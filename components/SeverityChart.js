@@ -15,7 +15,7 @@ import {
 export default function SeverityChart({ entries }) {
   if (!entries || entries.length < 2) {
     return (
-      <div className="bg-white border border-line rounded-2xl p-6 text-sm text-ink/50 text-center">
+      <div className="bg-surface border border-line rounded-2xl p-6 text-sm text-ink/50 text-center">
         Log at least 2 entries to see your severity trend here.
       </div>
     );
@@ -29,7 +29,7 @@ export default function SeverityChart({ entries }) {
     }));
 
   return (
-    <div className="bg-white border border-line rounded-2xl p-6 mb-6">
+    <div className="bg-surface border border-line rounded-2xl p-6 mb-6">
       <p className="font-mono text-xs uppercase tracking-[0.18em] text-pine mb-4">
         Severity trend
       </p>
@@ -71,4 +71,3 @@ export default function SeverityChart({ entries }) {
     </div>
   );
 }
-
