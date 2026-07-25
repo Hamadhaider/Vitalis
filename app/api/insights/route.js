@@ -10,9 +10,14 @@ Hard rules:
   say so plainly if entries are too few (fewer than 4) to find a pattern.
 - Never diagnose, never suggest medication or dosing changes.
 - Keep it encouraging and specific, not generic wellness advice.
+- If the most recent entries show a sharp, dangerous-sounding escalation (e.g. severity
+  spiking to 9-10 alongside notes describing an emergency symptom like chest pain,
+  difficulty breathing, fainting, or severe worsening), set "emergency" to true and say
+  so plainly instead of just describing a trend.
 
 Respond with ONLY valid JSON, no prose outside the JSON, in exactly this shape:
 {
+  "emergency": boolean,
   "hasEnoughData": boolean,
   "summary": "2-4 sentences describing what the data shows",
   "possibleTriggers": ["trigger patterns actually observed in the data, or empty array"],
@@ -23,7 +28,7 @@ Respond with ONLY valid JSON, no prose outside the JSON, in exactly this shape:
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { condition, entries } = body;
+    const { condition, entries, language } = body;
 
     if (!Array.isArray(entries) || entries.length === 0) {
       return Response.json({ error: 'Log at least one entry first.' }, { status: 400 });
@@ -40,10 +45,11 @@ export async function POST(request) {
 
     const userPrompt = `Condition being tracked: ${condition || 'unspecified'}\n\nLog entries:\n${formatted}\n\nReturn the pattern-insight JSON as instructed.`;
 
-    const result = await askForJSON({ system: SYSTEM_PROMPT, userPrompt, maxTokens: 700 });
+    const result = await askForJSON({ system: SYSTEM_PROMPT, userPrompt, maxTokens: 700, language });
     return Response.json(result);
   } catch (err) {
     console.error(err);
     return Response.json({ error: err.message || 'Something went wrong.' }, { status: 500 });
   }
 }
+
