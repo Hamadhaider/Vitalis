@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import PulseDivider from '@/components/PulseDivider';
 import Disclaimer from '@/components/Disclaimer';
+import { getStoredLanguage } from '@/components/LanguageToggle';
 
 const HISTORY_KEY = 'vitalis_medications_history_v1';
 
@@ -74,7 +75,7 @@ export default function MedicationsPage() {
       const res = await fetch('/api/medications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ medications: meds }),
+        body: JSON.stringify({ medications: meds, language: getStoredLanguage() }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Something went wrong.');
@@ -105,7 +106,7 @@ export default function MedicationsPage() {
           confirm with a pharmacist before starting or combining medications.
         </Disclaimer>
 
-        <form onSubmit={handleSubmit} className="mt-8 bg-white border border-line rounded-2xl p-6 sm:p-8 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-8 bg-surface border border-line rounded-2xl p-6 sm:p-8 space-y-4">
           {meds.map((med, i) => (
             <div key={i} className="flex gap-2">
               <input
@@ -156,7 +157,13 @@ export default function MedicationsPage() {
         {result && (
           <section className="mt-8 animate-fade_up">
             <PulseDivider label="Result" />
-            <div className="bg-white border border-line rounded-2xl p-6 sm:p-8">
+            {result.emergency && (
+              <div className="bg-brick text-paper rounded-2xl px-5 py-4 mb-5 font-medium">
+                This combination may be dangerous. Please contact a pharmacist, doctor, or
+                emergency services before taking these together.
+              </div>
+            )}
+            <div className="bg-surface border border-line rounded-2xl p-6 sm:p-8">
               <div className="flex items-center gap-3 mb-4">
                 <span
                   className={`text-xs font-mono uppercase tracking-wide px-3 py-1 rounded-full border ${
@@ -212,7 +219,7 @@ export default function MedicationsPage() {
                 <button
                   key={h.id}
                   onClick={() => viewPast(h)}
-                  className="focus-ring w-full text-left bg-white border border-line rounded-xl px-4 py-3 hover:border-pine transition-colors"
+                  className="focus-ring w-full text-left bg-surface border border-line rounded-xl px-4 py-3 hover:border-pine transition-colors"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-sm font-medium">{h.medications.join(' + ')}</p>
@@ -234,4 +241,3 @@ export default function MedicationsPage() {
     </>
   );
 }
-
