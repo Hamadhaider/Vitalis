@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'class',
   content: [
     './app/**/*.{js,jsx}',
     './components/**/*.{js,jsx}',
@@ -7,8 +8,10 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        paper: '#FAF8F3',
-        ink: '#1B2B29',
+        paper: 'var(--color-paper)',
+        ink: 'var(--color-ink)',
+        line: 'var(--color-line)',
+        surface: 'var(--color-surface)',
         pine: {
           DEFAULT: '#2F6F5E',
           light: '#4A8B77',
@@ -23,7 +26,6 @@ module.exports = {
           DEFAULT: '#BF5B44',
           light: '#F3DDD6',
         },
-        line: '#E4DFD3',
       },
       fontFamily: {
         display: ['var(--font-display)', 'serif'],
