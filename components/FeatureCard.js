@@ -4,7 +4,7 @@ export default function FeatureCard({ href, eyebrow, title, description, cta, ic
   return (
     <Link
       href={href}
-      className="focus-ring group relative flex flex-col gap-4 bg-white border border-line rounded-2xl p-7 hover:border-pine hover:shadow-[0_8px_30px_-12px_rgba(47,111,94,0.35)] transition-all"
+      className="focus-ring group relative flex flex-col gap-4 bg-surface border border-line rounded-2xl p-7 hover:border-pine hover:shadow-[0_8px_30px_-12px_rgba(47,111,94,0.35)] transition-all"
     >
       <div className="w-11 h-11 rounded-xl bg-pine-50 text-pine flex items-center justify-center group-hover:bg-pine group-hover:text-paper transition-colors">
         {icon}
