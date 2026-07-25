@@ -30,7 +30,7 @@ Respond with ONLY valid JSON, no prose outside the JSON, in exactly this shape:
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { symptoms, duration, severity } = body;
+    const { symptoms, duration, severity, language } = body;
 
     if (!symptoms || typeof symptoms !== 'string' || symptoms.trim().length < 3) {
       return Response.json({ error: 'Please describe your symptoms in a bit more detail.' }, { status: 400 });
@@ -42,10 +42,11 @@ Self-rated severity (1-10): ${severity || 'not specified'}
 
 Return the specialist routing JSON as instructed.`;
 
-    const result = await askForJSON({ system: SYSTEM_PROMPT, userPrompt, maxTokens: 700 });
+    const result = await askForJSON({ system: SYSTEM_PROMPT, userPrompt, maxTokens: 700, language });
     return Response.json(result);
   } catch (err) {
     console.error(err);
     return Response.json({ error: err.message || 'Something went wrong.' }, { status: 500 });
   }
 }
+
