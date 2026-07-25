@@ -14,10 +14,14 @@ Hard rules:
 - If two or more items could combine into something dangerous (e.g. serotonergic drugs,
   blood thinners with NSAIDs, MAOIs with many things), set "overallRisk" to "high" and
   say clearly that they should speak to a pharmacist or doctor before combining them.
+- If the combination described could cause a life-threatening reaction that needs
+  immediate attention (e.g. serotonin syndrome risk, severe bleeding risk, an MAOI
+  combined with a contraindicated drug), set "emergency" to true and say so plainly.
 - Keep tone calm and informative, never alarmist for low-risk combinations.
 
 Respond with ONLY valid JSON, no prose outside the JSON, in exactly this shape:
 {
+  "emergency": boolean,
   "overallRisk": "low" | "moderate" | "high" | "unknown",
   "summary": "1-2 plain-language sentences summarizing the overall picture",
   "interactions": [
@@ -35,7 +39,7 @@ If no meaningful interactions are found, return an empty "interactions" array an
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { medications } = body;
+    const { medications, language } = body;
 
     if (!Array.isArray(medications) || medications.filter(Boolean).length < 1) {
       return Response.json({ error: 'Add at least one medication.' }, { status: 400 });
@@ -44,10 +48,11 @@ export async function POST(request) {
     const list = medications.filter(Boolean).map((m) => `- ${m}`).join('\n');
     const userPrompt = `Medications / supplements the person is currently taking:\n${list}\n\nReturn the interaction JSON as instructed.`;
 
-    const result = await askForJSON({ system: SYSTEM_PROMPT, userPrompt, maxTokens: 900 });
+    const result = await askForJSON({ system: SYSTEM_PROMPT, userPrompt, maxTokens: 900, language });
     return Response.json(result);
   } catch (err) {
     console.error(err);
     return Response.json({ error: err.message || 'Something went wrong.' }, { status: 500 });
   }
 }
+
